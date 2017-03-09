@@ -10,6 +10,7 @@
 
 # Written by Petru Paler, modified to run under Python 3 by Ivailo Karamanolev
 
+
 class BTFailure(Exception):
     pass
 
@@ -72,9 +73,9 @@ def bdecode(x):
     try:
         r, l = decode_func[x[0]](x, 0)
     except (IndexError, KeyError, ValueError):
-        raise BTFailure("not a valid bencoded string")
+        raise BTFailure('not a valid bencoded string')
     if l != len(x):
-        raise BTFailure("invalid bencoded value (data after valid prefix)")
+        raise BTFailure('invalid bencoded value (data after valid prefix)')
     return r
 
 
@@ -89,7 +90,7 @@ def encode_bool(x, r):
         encode_int(0, r)
 
 
-def encode_string(x, r):
+def encode_bytes(x, r):
     r.extend((str(len(x)).encode(), b':', x))
 
 
@@ -105,18 +106,23 @@ def encode_dict(x, r):
     item_list = list(x.items())
     item_list.sort()
     for k, v in item_list:
-        r.extend((str(len(k)).encode(), b':', k))
+        encode_func[type(k)](k,r)
         encode_func[type(v)](v, r)
     r.append(b'e')
 
 
+def encode_str(x,r):
+    r.extend((str(len(x)).encode(), b':', x.encode()))
+
+
 encode_func = {
     int: encode_int,
-    bytes: encode_string,
+    bytes: encode_bytes,
     list: encode_list,
     tuple: encode_list,
     dict: encode_dict,
     bool: encode_bool,
+    str: encode_str
 }
 
 
